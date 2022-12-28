@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "simple-crud"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ovz1lcv81r4o"
+s3_prefix = "simple-crud"
+region = "us-east-2"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
