@@ -3,14 +3,27 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   simple_crud
 
+Globals:
+  Function:
+    Runtime: python3.9
+    Timeout: 30
+    Environment:
+      Variables:
+        ORDERS_TABLE: !Ref OrdersTable  # This is the real name of the table
 
 Resources:
+  OrdersTable: # This is not the real table name
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: Number
+
   CreateOrderFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: simple_crud/
       Handler: create.lambda_handler
-      Runtime: python3.9
       Architectures:
         - x86_64
       Events:
@@ -19,13 +32,15 @@ Resources:
           Properties:
             Path: /orders
             Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrdersTable
 
   ReadOrderFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: simple_crud/
       Handler: read.lambda_handler
-      Runtime: python3.9
       Architectures:
         - x86_64
       Events:
@@ -34,3 +49,17 @@ Resources:
           Properties:
             Path: /orders/{id}
             Method: GET
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref OrdersTable
+
+Outputs:
+  CreateOrdersAPI:
+    Description: "API Gateway Endpoint URL for creating Orders"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/orders"
+  CreateOrderFunction:
+    Description: "Create Order Function API"
+    Value: !GetAtt CreateOrderFunction.Arn
+  CreateOrderFunctionIAMRole:
+    Description: "Create Order Function IAM Role ARN"
+    Value: !GetAtt CreateOrderFunctionRole.Arn
